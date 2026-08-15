@@ -1,55 +1,43 @@
 import streamlit as st
-import azure.cognitiveservices.speech as speechsdk
-from openai import AzureOpenAI
+import google.generativeai as genai
+from gtts import gTTS
+import os
 
 st.set_page_config(page_title="FinVeda-Voice", page_icon="🎙️")
 st.title("🎙️ FinVeda-Voice: Multi-Agent Voice AI")
-st.subheader("Autonomous Customer Support Agent powered by Azure GPT-4o")
+st.subheader("Autonomous Customer Support Agent powered by Google Gemini")
 
-# Load secrets
-AZURE_SPEECH_KEY = st.secrets["AZURE_SPEECH_KEY"]
-AZURE_SPEECH_REGION = st.secrets["AZURE_SPEECH_REGION"]
-AZURE_OPENAI_KEY = st.secrets["AZURE_OPENAI_KEY"]
-AZURE_OPENAI_ENDPOINT = st.secrets["AZURE_OPENAI_ENDPOINT"]
-DEPLOYMENT_NAME = "gpt-4o"
+# Load Google Key from secrets
+GOOGLE_API_KEY = st.secrets["AQ.Ab8RN6JfxMv4MQx9m0gaws9imd_RexR2VOFmcjZJTRGF5NTRMA"]
+genai.configure(api_key=AQ.Ab8RN6JfxMv4MQx9m0gaws9imd_RexR2VOFmcjZJTRGF5NTRMA)
 
-client = AzureOpenAI(
-    api_key=AZURE_OPENAI_KEY,
-    api_version="2024-02-15-preview",
-    azure_endpoint=AZURE_OPENAI_ENDPOINT
-)
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 def get_ai_response(user_text):
-    system_prompt = "You are FinVeda-Voice, an autonomous customer support agent for a fintech company. Be helpful, fast, and professional. If refund is needed, say 'Refund initiated and email sent.'"
-    response = client.chat.completions.create(
-        model=DEPLOYMENT_NAME,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_text}
-        ]
-    )
-    return response.choices[0].message.content
+    system_prompt = """You are FinVeda-Voice, an autonomous customer support agent for a fintech company. 
+    Be helpful, fast, and professional. If refund is needed, say 'Refund initiated and email sent.'"""
+    
+    response = model.generate_content(system_prompt + "\n\nCustomer: " + user_text)
+    return response.text
 
 def text_to_speech(text):
-    speech_config = speechsdk.SpeechConfig(subscription=AZURE_SPEECH_KEY, region=AZURE_SPEECH_REGION)
-    speech_config.speech_synthesis_voice_name = "en-US-JennyNeural"
-    synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
-    synthesizer.speak_text_async(text)
-    return text
+    tts = gTTS(text=text, lang='en')
+    tts.save("response.mp3")
+    return "response.mp3"
 
-# UI - MIC REMOVED, TEXT INPUT ADDED
+# UI
 st.info("Type your problem and click 'Start Call'")
 user_input = st.text_input("Customer Problem", "My money was debited twice")
 
 if st.button("🎤 Start Call"):
     st.success(f"You: {user_input}")
 
-    with st.spinner("Agent 2: Thinking with GPT-4o..."):
+    with st.spinner("Agent 2: Thinking with Gemini..."):
         ai_response = get_ai_response(user_input)
     st.info(f"AI Agent: {ai_response}")
 
     with st.spinner("Agent 3: Speaking..."):
-        text_to_speech(ai_response)
+        audio_file = text_to_speech(ai_response)
+        st.audio(audio_file)
 
     st.success("✅ Call Resolved. Email triggered to customer.")
-    st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3") # demo audio
