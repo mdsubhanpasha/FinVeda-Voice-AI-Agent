@@ -17,9 +17,9 @@ def get_ai_response(user_text):
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         messages.extend(st.session_state.messages)
         messages.append({"role": "user", "content": user_text})
-        
+
         response = client.chat.completions.create(
-            model="google/gemini-1.5-flash:free", # FIXED MODEL
+            model="google/gemini-flash-1.5", # FIXED - NO :free
             messages=messages
         )
         return response.choices[0].message.content
@@ -60,4 +60,4 @@ with col2:
         st.rerun()
 
 st.markdown("---")
-st.caption("Built with Streamlit + Python + OpenRouter | FinVeda-Voice v1.3")
+st.caption("Built with Streamlit + Python + OpenRouter | FinVeda-Voice v1.4")
