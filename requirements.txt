@@ -1,4 +1,0 @@
-streamlit
-azure-cognitiveservices-speech
-openai>=1.0.0
-python-dotenv
